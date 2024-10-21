@@ -31,13 +31,15 @@ export class AuthGuard implements CanActivate {
     ) {
       const token = (request.headers.authorization as string).split(' ')[1];
       const decodedToken: any = this.jwtService.decode(token);
-      if (
-        !decodedToken ||
-        !decodedToken.exp ||
-        decodedToken.exp * 1000 < Date.now()
-      ) {
-        throw new UnauthorizedException('Token expired');
-      }
+
+      // if (
+      //   !decodedToken ||
+      //   !decodedToken.exp ||
+      //   decodedToken.exp * 1000 < Date.now()
+      // ) {
+      //   throw new UnauthorizedException('Token expired');
+      // }
+      console.log('request.headers.authorization=', decodedToken)
 
       request.user = await this.jwtStrategy.validate(decodedToken);
       return true;

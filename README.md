@@ -1,33 +1,32 @@
-## Описание работы 
-# в скобках указано текущее положение для простоты
-В проекте добавлены 3 приложения:
-  1. order - управляет заказкми, организует сагу (лучше выделить отдельный сервис), управляет circuit breaker (обычно его используют отдельно, а лучше в виде прокси), запрашивает кошелек пользователя (логично использовать отдельно)
-  2. Payment - управляет платежом
-  3. Notify - управляет оповещением
+## Description of work
+# current status is given in brackets for simplicity
+3 applications have been added to the project:
+1. order - manages orders, organizes a saga (it is better to allocate a separate service), manages a circuit breaker (usually it is used separately, and better as a proxy), requests a user's wallet (it is logical to use separately)
+2. Payment - manages payment
+3. Notify - manages notification
 
-# Схема
+# Scheme
 ![Local Image](./circuit_breaker.png)
 
+1. Initializing an order
+2. Receiving an order Payment service, creating payment
+3. Sending information to the Order service about payment
+4. Receiving information to the Order service about payment
+5. Requesting a sufficient amount in the wallet
+6. Sending information about the sufficiency of the amount to the Payment service
+7. Making a payment
+8. Sending information about the payment to the Order service
+9. Saving information about the payment in the Order service
+10. Sending information about the payment status to the Notify service
+11. Sending Email
+12. Sending information about sending to the Order service
+13. End of the saga
 
-1. Инициализация заказа
-2. Получение заказа Payment service, создание payment
-3. Отправка информации в Order service о payment
-4. Получение информации в Order service о payment
-5. Запрос в кошельке достаточной суммы
-6. Отправка информации о достаточности суммы в Payment service
-7. Выполнение оплаты
-8. Отправка информации о платеже в Order service
-9. Сохранение информации о платеже в Order service
-10. Отправка информации о состоянии платежа в Notify service
-11. Отправка Email
-12. Отправка информация об отправке в Order service
-13. Завершение саги
+# compensating transactions are provided at each stage
 
-# на каждом этапе предусмотрены компенсирующие транзакции
+# Description of the circuit breaker, to work with the queue, it listens to a separate queue, into which expired messages fall.
 
-# Описание работы circuit breaker, для работы с очередью слушает отдельную очередь, в которую падают просроченные сообщения.
-
-  1. В нормальном состоянии (IsClose) сообщения свободно отправляются в брокер
-  2. При получении просроченных сообщений переходит в состояние Half-Open, для задержек перед отправкой
-  3. После нескольких циклов поступающих ошибок в состоянии Half-Open переходит в состояние IsOpen. Перестает принимать сообщения и возвращает ошибку до следующего цикла запуска
-  4. Если ощибок нет в состояниях IsOpen и Half-Open, переходит с каждым циклом в предыдущее состояние IsOpen -> Half-Open -> IsClose.
+1. In the normal state (IsClose), messages are freely sent to the broker
+2. When receiving expired messages, it goes to the Half-Open state, for delays before sending
+3. After several cycles of incoming errors in the Half-Open state, it goes to the IsOpen state. Stops accepting messages and returns an error until the next startup cycle
+4. If there are no errors in the IsOpen and Half-Open states, it goes to the previous state IsOpen -> Half-Open -> IsClose with each cycle.
